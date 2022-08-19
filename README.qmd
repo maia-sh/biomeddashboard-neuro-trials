@@ -1,0 +1,66 @@
+---
+format: gfm
+editor: visual
+editor_options: 
+  chunk_output_type: console
+execute:
+  echo: false
+  warning: false
+---
+
+# biomeddashboard-neuro-trials
+
+This repository is part of the [ScholCommLab-led project "Biomed OS Dashboard"](https://docs.google.com/document/d/18zr1QBbvstYkXOXK2l-2OUyVhWExH54eeW8BGimYN98/). It uses [data on a sample of The Neuro's publication records](https://www.dropbox.com/s/lxjsihhzys7h6r7/cleaned_y2021_oa_info_109.csv?dl=0) and builds off [code developed for QUEST's project "IntoValue"](https://github.com/maia-sh/intovalue-data).
+
+Here, we evaluate The Neuro's publications for the presence of clinical trial registration numbers (TRNs) in their PubMed abstracts and metadata ("secondary identifier" field). Methods are described in detail [Salholz-Hillel et al. 2022](https://doi.org/10.1177/17407745221087456).
+
+```{r, setup}
+library(dplyr)
+
+query_logs <- loggit::read_logs(here::here("queries.log"))
+
+get_latest_query <- function(query, logs) {
+  logs |> 
+  filter(log_msg == query) |> 
+    arrange(desc(timestamp)) |> 
+    slice_head(n = 1) |> 
+    pull(timestamp) |> 
+    as.Date.character()
+}
+
+publications <- readr::read_csv(here::here("data", "raw", "neuro-validated-pubs.csv"))
+trns <- readr::read_csv(here::here("data", "processed", "trn", "trn-combined.csv"))
+```
+
+PubMed records were downloaded on `r get_latest_query("PubMed", query_logs)`.
+
+## Results
+
+In the sample of `r nrow(publications)` The Neuro publications, we found `r nrow(trns)` TRNs in the PubMed abstracts and metadata of `r n_distinct(trns$pmid)` publications.
+
+Of PubMed records with TRNs, most had TRNs in both the abstract and metadata:
+
+```{r}
+count(trns, has_trn_secondary_id, has_trn_abstract) |> 
+  arrange(desc(n)) |> 
+  knitr::kable()
+```
+
+ClinicalTrials.gov was by far the most common registry:
+
+```{r}
+count(trns, registry) |> 
+  arrange(desc(n)) |> 
+  knitr::kable()
+```
+
+Of PubMed records with TRNs, most include a single TRN:
+
+```{r}
+trns |> 
+count(pmid, name = "n_trns") |> 
+  count(n_trns, name = "n_pmids") |> 
+  knitr::kable()
+```
+
+Get the csv of TRNs here!
