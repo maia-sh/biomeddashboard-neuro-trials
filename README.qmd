@@ -63,4 +63,4 @@ count(pmid, name = "n_trns") |>
   knitr::kable()
 ```
 
-Get the csv of TRNs here!
+Get the csv of TRNs [here](https://github.com/maia-sh/biomeddashboard-neuro-trials/blob/master/data/processed/trn/trn-combined.csv)!
